@@ -1,35 +1,30 @@
-import React, { useState } from 'react';
-import { Container, Button, Form, Table } from 'react-bootstrap';
-
-const initialForm = {
-  name: '',
-  email: '',
-  city: 'HCM',
-  password: '',
-  confirmPassword: '',
-};
-
-const initialValue = [
-  {
-    id: Math.floor(Math.random() * 1000),
-    fullName: 'tony nguyen',
-    email: 'tony@gmail.com',
-    address: 'dien bien phu',
-    city: 'hcm',
-    country: 'vn',
-  },
-  {
-    id: Math.floor(Math.random() * 1000),
-    fullName: 'tony hau',
-    email: 'tony@gmail.com',
-    address: 'dien bien phu',
-    city: 'hcm',
-    country: 'vn',
-  }
-]
+import React from 'react';
+import { useForm } from "react-hook-form"
 
 function App() {
-  const [users, setUsers] = React.useState(initialValue);
+  const [users, setUsers] = React.useState([]);
+
+  const {
+    register,
+    handleSubmit,
+    watch,
+    formState: { errors },
+  } = useForm()
+
+  const onSubmit = (data) => {
+    const user = {
+      id: Math.floor(Math.random() * 1000),
+      fullName: data.fullName,
+      email: data.email,
+      address: data.address,
+      city:  data.city,
+      country: data.countries
+    }
+    setUsers(prevState => {
+      return [...prevState, user]
+    })
+  }
+
   return (
     <div className="min-h-screen p-6 bg-gray-100 ">
       <div className="container max-w-screen-lg mx-auto">
@@ -45,45 +40,97 @@ function App() {
               </div>
 
               <div className="lg:col-span-2">
-                <div className="grid gap-4 gap-y-2 text-sm grid-cols-1 md:grid-cols-5">
-                  <div className="md:col-span-5">
-                    <label htmlFor="full_name">Full Name</label>
-                    <input type="text" name="full_name" id="full_name" className="h-10 border mt-1 rounded px-4 w-full bg-gray-50"  />
-                  </div>
+                <form onSubmit={handleSubmit(onSubmit)}>
+                  <div className="grid gap-4 gap-y-2 text-sm grid-cols-1 md:grid-cols-5">
+                    <div className="md:col-span-5">
+                      <label htmlFor="full_name">Full Name</label>
+                      <input 
+                        type="text" 
+                        name="fullName" 
+                        id="fullName"  
+                        className="h-10 border mt-1 rounded px-4 w-full bg-gray-50"  
+                        {...register("fullName", {
+                          required: true,
+                          minLength: 10,
+                        })}
+                      />
+                      {errors.fullName && <p className='text-red-600 my-2'>This min field is 10.</p>}
+                    </div>
 
-                  <div className="md:col-span-5">
-                    <label htmlFor="email">Email Address</label>
-                    <input type="text" name="email" id="email" className="h-10 border mt-1 rounded px-4 w-full bg-gray-50"  placeholder="email@domain.com" />
-                  </div>
+                    <div className="md:col-span-5">
+                      <label htmlFor="email">Email Address</label>
+                      <input 
+                        type="text" 
+                        name="email" 
+                        id="email" 
+                        className="h-10 border mt-1 rounded px-4 w-full bg-gray-50"  
+                        placeholder="email@domain.com" 
+                        {...register("email", {
+                          required: true,
+                          minLength: {
+                            value: 10,
+                            message: 'This field is required'
+                          },
+                          pattern: {
+                            value: /\b[A-Z0-9._%+-]+@gmail\.com\b/i,
+                            message: "Email must end with @gmail.com"
+                          }
+                        })}
+                      />
+                      <p className='text-red-600 my-2'>
+                        {errors?.minLength?.message}
+                        {errors?.email?.message}
+                      </p>
+                    </div>
 
-                  <div className="md:col-span-3">
-                    <label htmlFor="address">Address / Street</label>
-                    <input type="text" name="address" id="address" className="h-10 border mt-1 rounded px-4 w-full bg-gray-50"  placeholder="" />
-                  </div>
+                    <div className="md:col-span-3">
+                      <label htmlFor="address">Address / Street</label>
+                      <input 
+                        type="text" 
+                        name="address" 
+                        id="address" 
+                        className="h-10 border mt-1 rounded px-4 w-full bg-gray-50"  
+                        placeholder="" 
+                        {...register("address")}
+                      />
+                    </div>
 
-                  <div className="md:col-span-2">
-                    <label htmlFor="city">City</label>
-                    <input type="text" name="city" id="city" className="h-10 border mt-1 rounded px-4 w-full bg-gray-50"  placeholder="" />
-                  </div>
+                    <div className="md:col-span-2">
+                      <label htmlFor="city">City</label>
+                      <input 
+                        type="text" 
+                        name="city" 
+                        id="city" 
+                        className="h-10 border mt-1 rounded px-4 w-full bg-gray-50"  
+                        placeholder="" 
+                        {...register("city")}
+                      />
+                    </div>
 
-                  <div className="md:col-span-5">
-                    <label htmlFor="country">Country / region</label>
-                    <select id="countries" defaultValue="DEFAULT" className="mt-1 bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5">
-                        <option value="DEFAULT">Choose a country</option>
-                        <option value="US">United States</option>
-                        <option value="CA">Canada</option>
-                        <option value="FR">France</option>
-                        <option value="DE">Germany</option>
-                    </select>
-                  </div>
+                    <div className="md:col-span-5">
+                      <label htmlFor="country">Country / region</label>
+                      <select 
+                        id="countries" 
+                        defaultValue="DEFAULT" 
+                        className="mt-1 bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5"
+                        {...register("countries")}
+                      >
+                          <option value="DEFAULT">Choose a country</option>
+                          <option value="US">United States</option>
+                          <option value="CA">Canada</option>
+                          <option value="FR">France</option>
+                          <option value="DE">Germany</option>
+                      </select>
+                    </div>
 
-                  <div className="md:col-span-5 text-right">
-                    <div className="inline-flex items-end">
-                      <button className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">Submit</button>
+                    <div className="md:col-span-5 text-right">
+                      <div className="inline-flex items-end">
+                        <button type="submit" className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">Submit</button>
+                      </div>
                     </div>
                   </div>
-
-                </div>
+                </form>
+                
               </div>
             </div>
           </div>
@@ -154,6 +201,38 @@ function App() {
                 )}
               </tbody>
           </table>
+        </div>
+      </div>
+
+      <div className="container max-w-screen-lg mx-auto">
+        <div className="flex items-center justify-end mt-4">
+          <span className="text-sm text-gray-700 dark:text-gray-400">
+            Showing {' '}
+            {users.length > 10 && (
+              <>
+                <span className="font-semibold text-gray-900">1</span> 
+                {' '} to {' '}
+                <span className="font-semibold text-gray-900">10</span> 
+                {' '} of {' '}
+              </>
+            )}
+              <span className="font-semibold text-gray-900">{users.length}</span> 
+              {' '} Entries
+          </span>
+          <div className="inline-flex xs:mt-0 ml-2">
+            <button className="flex items-center justify-center px-3 h-8 text-sm font-medium text-white bg-blue-800 rounded-s hover:bg-gray-900 ">
+                <svg className="w-3.5 h-3.5 me-2 rtl:rotate-180" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 14 10">
+                  <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 5H1m0 0 4 4M1 5l4-4"/>
+                </svg>
+                Prev
+            </button>
+            <button className="flex items-center justify-center px-3 h-8 text-sm font-medium text-white bg-blue-800 border-0 border-s border-gray-700 rounded-e hover:bg-gray-900 ">
+                Next
+                <svg className="w-3.5 h-3.5 ms-2 rtl:rotate-180" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 14 10">
+                <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M1 5h12m0 0L9 1m4 4L9 9"/>
+              </svg>
+            </button>
+          </div>
         </div>
       </div>
     </div>
