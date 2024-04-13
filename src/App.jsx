@@ -1,10 +1,18 @@
 import React from 'react';
-import { useForm } from "react-hook-form"
+import { useForm, Controller } from "react-hook-form";
+
+// components
+import TextField from './components/TextField';
+import SelectField from './components/SelectField';
+import ControllerTextField from './components/ControllerTextField';
+import Button from './components/Button';
+import ButtonPagination from './components/ButtonPagination';
 
 function App() {
   const [users, setUsers] = React.useState([]);
 
   const {
+    control,
     register,
     handleSubmit,
     watch,
@@ -14,11 +22,10 @@ function App() {
   const onSubmit = (data) => {
     const user = {
       id: Math.floor(Math.random() * 1000),
-      fullName: data.fullName,
+      firstName: data.firstName,
+      lastName: data.lastName,
       email: data.email,
-      address: data.address,
-      city:  data.city,
-      country: data.countries
+      role:  data.role,
     }
     setUsers(prevState => {
       return [...prevState, user]
@@ -42,40 +49,53 @@ function App() {
               <div className="lg:col-span-2">
                 <form onSubmit={handleSubmit(onSubmit)}>
                   <div className="grid gap-4 gap-y-2 text-sm grid-cols-1 md:grid-cols-5">
-                    <div className="md:col-span-5">
-                      <label htmlFor="full_name">Full Name</label>
-                      <input 
-                        type="text" 
-                        name="fullName" 
-                        id="fullName"  
-                        className="h-10 border mt-1 rounded px-4 w-full bg-gray-50"  
-                        {...register("fullName", {
-                          required: true,
-                          minLength: 10,
-                        })}
+                    <div className="md:col-span-3">
+                      <Controller
+                        name="firstName"
+                        control={control}
+                        render={({ field }) => (
+                          <ControllerTextField 
+                            type="text" 
+                            name="firstName" 
+                            label="First Name" 
+                            {...field}
+                          />
+                        )}
                       />
-                      {errors.fullName && <p className='text-red-600 my-2'>This min field is 10.</p>}
+                    </div>
+
+                    <div className="md:col-span-2">
+                      <TextField 
+                        type="text" 
+                        name="lastName" 
+                        label="Last Name" 
+                        register={register}
+                      />
                     </div>
 
                     <div className="md:col-span-5">
-                      <label htmlFor="email">Email Address</label>
-                      <input 
-                        type="text" 
-                        name="email" 
-                        id="email" 
-                        className="h-10 border mt-1 rounded px-4 w-full bg-gray-50"  
-                        placeholder="email@domain.com" 
-                        {...register("email", {
-                          required: true,
-                          minLength: {
-                            value: 10,
-                            message: 'This field is required'
-                          },
-                          pattern: {
-                            value: /\b[A-Z0-9._%+-]+@gmail\.com\b/i,
-                            message: "Email must end with @gmail.com"
-                          }
-                        })}
+                      <Controller
+                        name="email"
+                        control={control}
+                        render={({ field }) => (
+                          <ControllerTextField 
+                            type="text" 
+                            name="email" 
+                            label="Email" 
+                            {...field}
+                            {...register("email", {
+                              required: true,
+                              minLength: {
+                                value: 10,
+                                message: 'This field is required'
+                              },
+                              pattern: {
+                                value: /\b[A-Z0-9._%+-]+@gmail\.com\b/i,
+                                message: "Email must end with @gmail.com"
+                              }
+                            })}
+                          />
+                        )}
                       />
                       <p className='text-red-600 my-2'>
                         {errors?.minLength?.message}
@@ -83,49 +103,25 @@ function App() {
                       </p>
                     </div>
 
-                    <div className="md:col-span-3">
-                      <label htmlFor="address">Address / Street</label>
-                      <input 
-                        type="text" 
-                        name="address" 
-                        id="address" 
-                        className="h-10 border mt-1 rounded px-4 w-full bg-gray-50"  
-                        placeholder="" 
-                        {...register("address")}
-                      />
-                    </div>
-
-                    <div className="md:col-span-2">
-                      <label htmlFor="city">City</label>
-                      <input 
-                        type="text" 
-                        name="city" 
-                        id="city" 
-                        className="h-10 border mt-1 rounded px-4 w-full bg-gray-50"  
-                        placeholder="" 
-                        {...register("city")}
-                      />
-                    </div>
-
                     <div className="md:col-span-5">
-                      <label htmlFor="country">Country / region</label>
-                      <select 
-                        id="countries" 
-                        defaultValue="DEFAULT" 
-                        className="mt-1 bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5"
-                        {...register("countries")}
-                      >
-                          <option value="DEFAULT">Choose a country</option>
-                          <option value="US">United States</option>
-                          <option value="CA">Canada</option>
-                          <option value="FR">France</option>
-                          <option value="DE">Germany</option>
-                      </select>
+                      <SelectField 
+                        name="role"
+                        label="Role"
+                        options={[
+                          { label: 'Admin', value: 'admin' },
+                          { label: 'Member', value: 'member' },
+                          { label: 'Manager', value: 'manager' }
+                        ]}
+                        {...register("role")}
+                      />
                     </div>
 
                     <div className="md:col-span-5 text-right">
                       <div className="inline-flex items-end">
-                        <button type="submit" className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">Submit</button>
+                        <Button 
+                          type="submit"
+                          text="Submit"
+                        />
                       </div>
                     </div>
                   </div>
@@ -143,19 +139,16 @@ function App() {
               <thead className="text-xs text-gray-700 uppercase bg-gray-50">
                   <tr>
                     <th scope="col" className="px-6 py-3">
-                      Full name
+                      First Name
+                    </th>
+                    <th scope="col" className="px-6 py-3">
+                      Last Name
                     </th>
                     <th scope="col" className="px-6 py-3">
                       Email address
                     </th>
                     <th scope="col" className="px-6 py-3">
-                      Address
-                    </th>
-                    <th scope="col" className="px-6 py-3">
-                      City
-                    </th>
-                    <th scope="col" className="px-6 py-3">
-                      Country
+                      Role
                     </th>
                     <th scope="col" className="px-6 py-3">
                         Action
@@ -175,19 +168,16 @@ function App() {
                       return (
                         <tr key={user.id} className="odd:bg-white  even:bg-gray-50 border-b ">
                           <th scope="row" className="px-6 py-4 font-medium text-gray-900 whitespace-nowrap">
-                            {user.fullName}
+                            {user.firstName}
                           </th>
+                          <td className="px-6 py-4">
+                            {user.lastName}
+                          </td>
                           <td className="px-6 py-4">
                             {user.email}
                           </td>
                           <td className="px-6 py-4">
-                            {user.address}
-                          </td>
-                          <td className="px-6 py-4">
-                            {user.city}
-                          </td>
-                          <td className="px-6 py-4">
-                            {user.country}
+                            {user.role}
                           </td>
                           <td className="px-6 py-4 flex items-center">
                             <div className="font-medium text-blue-600 cursor-pointer mr-4">Edit</div>
@@ -220,18 +210,24 @@ function App() {
               {' '} Entries
           </span>
           <div className="inline-flex xs:mt-0 ml-2">
-            <button className="flex items-center justify-center px-3 h-8 text-sm font-medium text-white bg-blue-800 rounded-s hover:bg-gray-900 ">
-                <svg className="w-3.5 h-3.5 me-2 rtl:rotate-180" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 14 10">
-                  <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 5H1m0 0 4 4M1 5l4-4"/>
-                </svg>
-                Prev
-            </button>
-            <button className="flex items-center justify-center px-3 h-8 text-sm font-medium text-white bg-blue-800 border-0 border-s border-gray-700 rounded-e hover:bg-gray-900 ">
-                Next
-                <svg className="w-3.5 h-3.5 ms-2 rtl:rotate-180" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 14 10">
-                <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M1 5h12m0 0L9 1m4 4L9 9"/>
+            <ButtonPagination 
+              className="rounded-s" 
+              onClick={() => console.log('prev')}
+            >
+              <svg className="w-3.5 h-3.5 me-2 rtl:rotate-180" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 14 10">
+                <path stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 5H1m0 0 4 4M1 5l4-4"/>
               </svg>
-            </button>
+              Prev
+            </ButtonPagination>
+            <ButtonPagination 
+              className="rounded-e border-0 border-s border-gray-700"
+              onClick={() => console.log('next')}
+            >
+              Next
+              <svg className="w-3.5 h-3.5 ms-2 rtl:rotate-180" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 14 10">
+                <path stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M1 5h12m0 0L9 1m4 4L9 9"/>
+              </svg>
+            </ButtonPagination>
           </div>
         </div>
       </div>
