@@ -7,10 +7,21 @@ import SelectField from './components/SelectField';
 import ControllerTextField from './components/ControllerTextField';
 import Button from './components/Button';
 import ButtonPagination from './components/ButtonPagination';
+import ToastMessage from './components/ToastMessage';
+
+const defaultToast = {
+  open: false,
+  message: 'Default',
+  type: 'SUCCESS'
+};
 
 function App() {
   const [users, setUsers] = React.useState([]);
-
+  const [toast, setToast] = React.useState(defaultToast);
+  const [pagination, setPagination] = React.useState({
+    page: 1,
+    total: 0
+  })
   const {
     control,
     register,
@@ -19,7 +30,43 @@ function App() {
     formState: { errors },
   } = useForm()
 
-  const onSubmit = (data) => {
+  // initialize list user
+  async function showListUser(page) {
+   try {
+    const res = await fetch(`https://tony-auth-express.vercel.app/api/user?page=${page}&limit=10`)
+    const data = await res.json();
+    setUsers(data.data);
+   } catch(error) {
+    showToast('DANGER', 'Error show user')
+   }
+  }
+  React.useEffect(() => {
+    const { page } = pagination
+    showListUser(page);
+  }, [pagination])
+
+  // auto close toast after 1s
+  React.useEffect(() => {
+    if(!toast.open) return;
+    const timer = setTimeout(() => {
+      onClose()
+    }, 2000)
+
+    return () => {
+      clearTimeout(timer)
+    }
+  }, [toast])
+
+  function showToast(type, message) {
+    setToast(prevState => ({
+      ...prevState,
+      open: true,
+      type,
+      message
+    }))
+  }
+
+  const onSubmit = async (data) => {
     const user = {
       id: Math.floor(Math.random() * 1000),
       firstName: data.firstName,
@@ -27,13 +74,84 @@ function App() {
       email: data.email,
       role:  data.role,
     }
-    setUsers(prevState => {
-      return [...prevState, user]
-    })
+    try {
+      const res = await fetch('https://tony-auth-express.vercel.app/api/user/signup', {
+        method: 'POST',
+        headers: {
+          "Content-type": "application/json"
+        },
+        body: JSON.stringify({
+          "data": {
+            avatar: 'https://cdn.cloudflare.steamstatic.com/steamcommunity/public/images/avatars/00/009d272e2b496aa0758a86a17eac5f7716a99133_full.jpg',
+            password: '123456',
+            firstName: user.firstName,
+            lastName: user.lastName,
+            email: user.email,
+            role: user.role
+          }
+        })
+      })
+      const data = await res.json();
+      
+      // error
+      if(!data.isSucess) {
+        showToast('DANGER', data.msg)
+        return;
+      }
+
+      // success
+      showToast('SUCCESS', data.msg)
+      setUsers(prevState => {
+        return [...prevState, user]
+      })
+    } catch(err) {
+      showToast('DANGER', 'Error create user!')
+    }
   }
+
+  async function deleteUser(userId) {
+    try {
+      const res = await fetch(`https://tony-auth-express.vercel.app/api/user/${userId}`, {
+        method: 'DELETE'
+      })
+      const data = await res.json();
+      console.log('data: ', data)
+      if(!data.isSucess) {
+        showToast('DANGER', 'Error delete user')
+        return;
+      }
+      
+      // update UI list users
+      const userIndex = users.findIndex(user => user._id === userId);
+      const newUsers = [...users];
+      newUsers.splice(userIndex, 1);
+      setUsers(newUsers);
+      // show toast
+      showToast('SUCCESS', data.msg)
+    } catch(error) {
+      showToast('DANGER', 'Error delete user')
+    }
+  }
+
+  function updateUser() {}
+
+
+  function onClose() {
+    setToast(defaultToast)
+  }
+  console.log('errors: ', errors)
 
   return (
     <div className="min-h-screen p-6 bg-gray-100 ">
+      {toast.open && (
+        <ToastMessage
+          message={toast.message}
+          type={toast.type}
+          onClose={onClose}
+        />
+      )}
+      
+
       <div className="container max-w-screen-lg mx-auto">
         <div>
           <h2 className="font-semibold text-xl text-gray-600">Responsive Form</h2>
@@ -98,7 +216,7 @@ function App() {
                         )}
                       />
                       <p className='text-red-600 my-2'>
-                        {errors?.minLength?.message}
+                        {errors?.email?.minLength?.message}
                         {errors?.email?.message}
                       </p>
                     </div>
@@ -181,7 +299,12 @@ function App() {
                           </td>
                           <td className="px-6 py-4 flex items-center">
                             <div className="font-medium text-blue-600 cursor-pointer mr-4">Edit</div>
-                            <div className="font-medium text-red-600 cursor-pointer">Delete</div>
+                            <div 
+                              className="font-medium text-red-600 cursor-pointer"
+                              onClick={() => deleteUser(user._id)}
+                            >
+                              Delete
+                            </div>
                           </td>
                         </tr>
                       )
